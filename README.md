@@ -131,3 +131,7 @@ Placeholder for dashboard, assessment, evidence library, and reports screenshots
 - Stripe/Paddle billing
 - AI-assisted policy drafting with strict disclaimers
 - Microsoft 365 and Google Workspace evidence collection
+
+## License
+
+This project is proprietary software. Use, copying, distribution, modification, resale, and hosted commercial operation require prior written permission from xnice1. See [LICENSE](LICENSE).
