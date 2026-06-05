@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+app:
+  jwt-secret: change-this-development-secret-change-this
+  jwt-issuer: nis2-ready-test
+  evidence-storage-path: ./target/evidence-test
+  max-evidence-file-size-bytes: 10485760
+  frontend-origin: http://localhost:5173

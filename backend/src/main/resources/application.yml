@@ -1,0 +1,23 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nis2_ready}
+    username: ${SPRING_DATASOURCE_USERNAME:nis2}
+    password: ${SPRING_DATASOURCE_PASSWORD:nis2}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+app:
+  jwt-secret: ${JWT_SECRET:change-this-development-secret-change-this}
+  jwt-issuer: ${JWT_ISSUER:nis2-ready}
+  evidence-storage-path: ${EVIDENCE_STORAGE_PATH:./data/evidence}
+  max-evidence-file-size-bytes: ${MAX_EVIDENCE_FILE_SIZE_BYTES:10485760}
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
