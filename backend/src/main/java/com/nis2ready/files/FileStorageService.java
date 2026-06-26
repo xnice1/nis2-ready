@@ -90,8 +90,10 @@ public class FileStorageService {
     return i < 0 ? "" : filename.substring(i + 1).toLowerCase();
   }
   private String safeOriginalFilename(String filename) {
-    String base = Path.of(filename == null ? "evidence" : filename).getFileName().toString();
-    base = base.replaceAll("[\\r\\n\\t\\x00-\\x1F\\x7F]", "_").trim();
+    String name = filename == null ? "evidence" : filename.replace('\\', '/');
+    int slash = name.lastIndexOf('/');
+    String base = slash >= 0 ? name.substring(slash + 1) : name;
+    base = base.replaceAll("[/\\\\\\r\\n\\t\\x00-\\x1F\\x7F\"]", "_").trim();
     if (base.isBlank()) base = "evidence";
     return base.length() > 180 ? base.substring(0, 180) : base;
   }
