@@ -1,6 +1,7 @@
 package com.nis2ready.assessments;
 
 import com.nis2ready.common.ApiException;
+import com.nis2ready.audit.*;
 import com.nis2ready.controls.ControlRepository;
 import com.nis2ready.questionnaires.QuestionnaireRepository;
 import com.nis2ready.questionnaires.QuestionnaireType;
@@ -22,8 +23,9 @@ public class AssessmentService {
   private final AssessmentScoringService scoring;
   private final TaskService tasks;
   private final QuestionnaireRepository questionnaires;
-  public AssessmentService(AssessmentRepository assessments, AssessmentAnswerRepository answers, ControlRepository controls, AssessmentScoringService scoring, TaskService tasks, QuestionnaireRepository questionnaires) {
-    this.assessments = assessments; this.answers = answers; this.controls = controls; this.scoring = scoring; this.tasks = tasks; this.questionnaires = questionnaires;
+  private final AuditService audit;
+  public AssessmentService(AssessmentRepository assessments, AssessmentAnswerRepository answers, ControlRepository controls, AssessmentScoringService scoring, TaskService tasks, QuestionnaireRepository questionnaires, AuditService audit) {
+    this.assessments = assessments; this.answers = answers; this.controls = controls; this.scoring = scoring; this.tasks = tasks; this.questionnaires = questionnaires; this.audit = audit;
   }
   @Transactional
   public AssessmentResponse create(UUID orgId, UUID userId, Role role) {
@@ -32,6 +34,8 @@ public class AssessmentService {
     a.createdBy = userId;
     questionnaires.findFirstByTypeAndActiveTrueOrderByVersionDesc(QuestionnaireType.READINESS).ifPresent(q -> a.questionnaireId = q.id);
     assessments.save(a);
+    audit.record(orgId, userId, AuditEventType.ASSESSMENT_CREATED, AuditOutcome.SUCCESS, "ASSESSMENT", a.id, "Readiness assessment created",
+      java.util.Map.of("status", a.status.name()));
     return toDto(a);
   }
   public List<AssessmentResponse> list(UUID orgId) { return assessments.findByOrganizationIdOrderByCreatedAtDesc(orgId).stream().map(this::toDto).toList(); }
@@ -65,7 +69,7 @@ public class AssessmentService {
     answers.save(ans);
   }
   @Transactional
-  public ScoreResponse complete(UUID orgId, Role role, UUID id) {
+  public ScoreResponse complete(UUID orgId, UUID userId, Role role, UUID id) {
     RoleGuard.requireContributor(role);
     var a = getEntity(orgId, id);
     var saved = answers.findByAssessmentId(id);
@@ -73,6 +77,8 @@ public class AssessmentService {
     var score = scoring.score(a, saved);
     a.status = AssessmentStatus.COMPLETED; a.completedAt = Instant.now(); a.overallScore = score.overallScore(); a.riskLevel = score.riskLevel();
     tasks.generateForAssessment(orgId, id, saved);
+    audit.record(orgId, userId, AuditEventType.ASSESSMENT_COMPLETED, AuditOutcome.SUCCESS, "ASSESSMENT", id, "Readiness assessment completed",
+      java.util.Map.of("overallScore", String.valueOf(score.overallScore()), "riskLevel", score.riskLevel().name()));
     return score;
   }
   public ScoreResponse score(UUID orgId, UUID id) { return scoring.score(getEntity(orgId, id), answers.findByAssessmentId(id)); }

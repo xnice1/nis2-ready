@@ -4,6 +4,7 @@ import com.nis2ready.assessments.AnswerOption;
 import com.nis2ready.assessments.AssessmentAnswer;
 import com.nis2ready.assessments.AssessmentRepository;
 import com.nis2ready.common.ApiException;
+import com.nis2ready.audit.*;
 import com.nis2ready.controls.ControlRepository;
 import com.nis2ready.organizations.MembershipRepository;
 import com.nis2ready.security.RoleGuard;
@@ -20,30 +21,39 @@ public class TaskService {
   private final AssessmentRepository assessments;
   private final ControlRepository controls;
   private final MembershipRepository memberships;
-  public TaskService(RemediationTaskRepository tasks, AssessmentRepository assessments, ControlRepository controls, MembershipRepository memberships) {
-    this.tasks = tasks; this.assessments = assessments; this.controls = controls; this.memberships = memberships;
+  private final AuditService audit;
+  public TaskService(RemediationTaskRepository tasks, AssessmentRepository assessments, ControlRepository controls, MembershipRepository memberships, AuditService audit) {
+    this.tasks = tasks; this.assessments = assessments; this.controls = controls; this.memberships = memberships; this.audit = audit;
   }
   public List<RemediationTask> list(UUID orgId) { return tasks.findByOrganizationIdOrderByCreatedAtDesc(orgId); }
   public RemediationTask get(UUID orgId, UUID id) { return tasks.findByIdAndOrganizationId(id, orgId).orElseThrow(() -> ApiException.notFound("Task not found")); }
   @Transactional
-  public RemediationTask create(UUID orgId, Role role, TaskRequest request) {
+  public RemediationTask create(UUID orgId, UUID userId, Role role, TaskRequest request) {
     RoleGuard.requireContributor(role);
     var task = new RemediationTask();
     task.organizationId = orgId;
     apply(orgId, task, request);
-    return tasks.save(task);
-  }
-  @Transactional
-  public RemediationTask update(UUID orgId, Role role, UUID id, TaskRequest request) {
-    RoleGuard.requireContributor(role);
-    var task = get(orgId, id);
-    apply(orgId, task, request);
+    tasks.save(task);
+    audit.record(orgId, userId, AuditEventType.TASK_CREATED, AuditOutcome.SUCCESS, "TASK", task.id, "Remediation task created",
+      java.util.Map.of("title", task.title, "priority", task.priority.name(), "status", task.status.name()));
     return task;
   }
   @Transactional
-  public void delete(UUID orgId, Role role, UUID id) {
+  public RemediationTask update(UUID orgId, UUID userId, Role role, UUID id, TaskRequest request) {
     RoleGuard.requireContributor(role);
-    tasks.delete(get(orgId, id));
+    var task = get(orgId, id);
+    apply(orgId, task, request);
+    audit.record(orgId, userId, AuditEventType.TASK_UPDATED, AuditOutcome.SUCCESS, "TASK", task.id, "Remediation task updated",
+      java.util.Map.of("title", task.title, "priority", task.priority.name(), "status", task.status.name()));
+    return task;
+  }
+  @Transactional
+  public void delete(UUID orgId, UUID userId, Role role, UUID id) {
+    RoleGuard.requireContributor(role);
+    var task = get(orgId, id);
+    tasks.delete(task);
+    audit.record(orgId, userId, AuditEventType.TASK_DELETED, AuditOutcome.SUCCESS, "TASK", id, "Remediation task deleted",
+      java.util.Map.of("title", task.title));
   }
   @Transactional
   public void generateForAssessment(UUID orgId, UUID assessmentId, List<AssessmentAnswer> answers) {

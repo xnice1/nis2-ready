@@ -22,6 +22,7 @@ This product is not legal advice, certification, official compliance validation,
 - Scoring by category and overall readiness, with risk levels from `LOW` to `CRITICAL`
 - Automatic remediation task generation from weak or missing answers
 - Evidence upload with extension validation, checksum calculation, metadata, and safe local storage
+- Organization-scoped security audit events for auth, organization, assessment, task, and evidence actions
 - Built-in editable policy templates
 - Incident response checklist with default actions
 - Dashboard and JSON readiness/monthly reports
@@ -92,6 +93,10 @@ Assessments:
 - `POST /api/assessments/{id}/complete`
 - `GET /api/assessments/{id}/score`
 
+Audit:
+
+- `GET /api/audit/events?limit=100`
+
 Controls, tasks, evidence, policies, incidents, and reports follow the endpoint list in the product brief.
 
 ## Database Migrations
@@ -100,6 +105,8 @@ Flyway runs automatically on backend startup.
 
 - `V1__schema.sql`: core schema for users, organizations, memberships, questionnaires, assessments, controls, tasks, files, evidence, policies, incidents, and actions
 - `V2__seed_controls_and_templates.sql`: 32 initial controls and 10 policy templates
+- `V3__seed_questionnaires.sql`: scoping and readiness questionnaire seed data
+- `V4__audit_events.sql`: organization-scoped security audit event history
 
 ## Evidence Storage
 
@@ -112,7 +119,8 @@ Evidence uploads are treated as confidential. The backend checks organization-sc
 - Keep `JWT_SECRET` unique per environment and outside source control.
 - Business records are queried by `organizationId`; linked task and assessment IDs are validated before saving.
 - `VIEWER` is read-only. Organization updates and invitations require `OWNER` or `ADMIN`.
-- Do not put this development local-disk evidence store behind public internet access without adding production storage controls, malware scanning, audit logs, and backups.
+- Audit events record sensitive workflow activity without storing passwords, JWTs, raw file paths, or file contents.
+- Do not put this development local-disk evidence store behind public internet access without adding production storage controls, malware scanning, and backups.
 
 ## Screenshots
 
@@ -126,7 +134,6 @@ Placeholder for dashboard, assessment, evidence library, and reports screenshots
 - NIST CSF mapping
 - Supplier questionnaire portal
 - Email reminders
-- Audit logs
 - S3-compatible file storage
 - Stripe/Paddle billing
 - AI-assisted policy drafting with strict disclaimers

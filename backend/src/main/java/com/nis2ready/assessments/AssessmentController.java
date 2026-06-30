@@ -31,7 +31,7 @@ public class AssessmentController {
   @PostMapping("/{id}/complete")
   ScoreResponse complete(Authentication auth, @PathVariable UUID id) {
     var user = CurrentUser.get(auth);
-    return service.complete(user.organizationId(), user.role(), id);
+    return service.complete(user.organizationId(), user.userId(), user.role(), id);
   }
   @GetMapping("/{id}/score")
   ScoreResponse score(Authentication auth, @PathVariable UUID id) { return service.score(CurrentUser.get(auth).organizationId(), id); }

@@ -17,18 +17,18 @@ public class TaskController {
   @PostMapping
   RemediationTask create(Authentication auth, @RequestBody TaskRequest request) {
     var user = CurrentUser.get(auth);
-    return service.create(user.organizationId(), user.role(), request);
+    return service.create(user.organizationId(), user.userId(), user.role(), request);
   }
   @GetMapping("/{id}")
   RemediationTask get(Authentication auth, @PathVariable UUID id) { return service.get(CurrentUser.get(auth).organizationId(), id); }
   @PutMapping("/{id}")
   RemediationTask update(Authentication auth, @PathVariable UUID id, @RequestBody TaskRequest request) {
     var user = CurrentUser.get(auth);
-    return service.update(user.organizationId(), user.role(), id, request);
+    return service.update(user.organizationId(), user.userId(), user.role(), id, request);
   }
   @DeleteMapping("/{id}")
   void delete(Authentication auth, @PathVariable UUID id) {
     var user = CurrentUser.get(auth);
-    service.delete(user.organizationId(), user.role(), id);
+    service.delete(user.organizationId(), user.userId(), user.role(), id);
   }
 }

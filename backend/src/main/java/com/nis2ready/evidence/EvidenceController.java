@@ -32,11 +32,12 @@ public class EvidenceController {
   @PutMapping("/{id}/status")
   EvidenceResponse status(Authentication auth, @PathVariable UUID id, @RequestBody EvidenceStatusRequest request) {
     var user = CurrentUser.get(auth);
-    return service.status(user.organizationId(), user.role(), id, request.status());
+    return service.status(user.organizationId(), user.userId(), user.role(), id, request.status());
   }
   @GetMapping("/{id}/download")
   ResponseEntity<?> download(Authentication auth, @PathVariable UUID id) {
-    var d = service.download(CurrentUser.get(auth).organizationId(), id);
+    var user = CurrentUser.get(auth);
+    var d = service.download(user.organizationId(), user.userId(), id);
     String filename = d.filename().replaceAll("[\\r\\n\\t\\x00-\\x1F\\x7F\"]", "_");
     String encoded = UriUtils.encode(filename, java.nio.charset.StandardCharsets.UTF_8);
     return ResponseEntity.ok().contentType(MediaType.parseMediaType(d.contentType()))
@@ -45,6 +46,6 @@ public class EvidenceController {
   @DeleteMapping("/{id}")
   void delete(Authentication auth, @PathVariable UUID id) {
     var user = CurrentUser.get(auth);
-    service.delete(user.organizationId(), user.role(), id);
+    service.delete(user.organizationId(), user.userId(), user.role(), id);
   }
 }
