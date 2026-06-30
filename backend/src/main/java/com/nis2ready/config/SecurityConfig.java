@@ -1,11 +1,13 @@
 package com.nis2ready.config;
 
 import com.nis2ready.security.JwtAuthenticationFilter;
+import com.nis2ready.security.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,11 +24,11 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
   @Bean
-  SecurityFilterChain security(HttpSecurity http, JwtAuthenticationFilter jwt) throws Exception {
-    return http.csrf(csrf -> csrf.disable()).cors(cors -> {})
-      .formLogin(form -> form.disable())
-      .httpBasic(basic -> basic.disable())
-      .logout(logout -> logout.disable())
+  SecurityFilterChain security(HttpSecurity http, JwtAuthenticationFilter jwt, RateLimitFilter rateLimit) throws Exception {
+    return http.csrf(AbstractHttpConfigurer::disable).cors(cors -> {})
+      .formLogin(AbstractHttpConfigurer::disable)
+      .httpBasic(AbstractHttpConfigurer::disable)
+      .logout(AbstractHttpConfigurer::disable)
       .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .exceptionHandling(ex -> ex
         .authenticationEntryPoint((request, response, authException) -> {
@@ -43,6 +45,7 @@ public class SecurityConfig {
         .requestMatchers("/api/auth/register", "/api/auth/login", "/actuator/health").permitAll()
         .anyRequest().authenticated())
       .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
+      .addFilterAfter(rateLimit, JwtAuthenticationFilter.class)
       .build();
   }
   @Bean

@@ -27,6 +27,36 @@
       "type": "java.lang.String",
       "description": "Allowed frontend origin for CORS.",
       "defaultValue": "http://localhost:5173"
+    },
+    {
+      "name": "app.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables in-memory API and authentication rate limiting.",
+      "defaultValue": true
+    },
+    {
+      "name": "app.rate-limit.api-requests-per-minute",
+      "type": "java.lang.Integer",
+      "description": "Maximum authenticated API requests per minute per user and organization.",
+      "defaultValue": 300
+    },
+    {
+      "name": "app.rate-limit.auth-requests-per-minute",
+      "type": "java.lang.Integer",
+      "description": "Maximum login/register requests per minute per client IP address.",
+      "defaultValue": 20
+    },
+    {
+      "name": "app.rate-limit.login-failures-per-window",
+      "type": "java.lang.Integer",
+      "description": "Maximum failed login attempts allowed per email and client IP before temporary lockout.",
+      "defaultValue": 5
+    },
+    {
+      "name": "app.rate-limit.login-failure-window-seconds",
+      "type": "java.lang.Long",
+      "description": "Login failure lockout window length in seconds.",
+      "defaultValue": 900
     }
   ]
 }

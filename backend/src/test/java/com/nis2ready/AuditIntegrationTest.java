@@ -73,7 +73,7 @@ class AuditIntegrationTest {
   void auditEventsAreWrittenForSensitiveActionsWithoutRawSecretsOrStoragePaths() throws Exception {
     TestAccount owner = registerAccount("audit-owner");
     failedLogin(owner.email());
-    login(owner.email(), PASSWORD);
+    login(owner.email());
 
     mvc.perform(put("/api/organizations/current")
         .header(AUTHORIZATION, bearer(owner.token()))
@@ -92,7 +92,7 @@ class AuditIntegrationTest {
         .content(json(Map.of("status", "ACCEPTED"))))
       .andExpect(status().isOk());
 
-    UUID taskId = createTask(owner.token(), "Audit task");
+    UUID taskId = createAuditTask(owner.token());
 
     mvc.perform(delete("/api/tasks/{id}", taskId).header(AUTHORIZATION, bearer(owner.token())))
       .andExpect(status().isOk());
@@ -127,7 +127,7 @@ class AuditIntegrationTest {
     TestAccount tenantAOwner = registerAccount("tenant-a-audit");
     TestAccount tenantBOwner = registerAccount("tenant-b-audit");
     TestAccount viewer = registerAccount("tenant-a-viewer");
-    String viewerToken = tokenForMembership(viewer.userId(), tenantAOwner.organizationId(), Role.VIEWER);
+    String viewerToken = tokenForViewerMembership(viewer.userId(), tenantAOwner.organizationId());
 
     uploadEvidence(tenantAOwner.token(), "tenant-a-audit.txt", "Tenant A confidential audit marker");
 
@@ -169,10 +169,10 @@ class AuditIntegrationTest {
     );
   }
 
-  private void login(String email, String password) throws Exception {
+  private void login(String email) throws Exception {
     mvc.perform(post("/api/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
-        .content(json(Map.of("email", email, "password", password))))
+        .content(json(Map.of("email", email, "password", PASSWORD))))
       .andExpect(status().isOk());
   }
 
@@ -194,12 +194,12 @@ class AuditIntegrationTest {
     return UUID.fromString(objectMapper.readTree(result.getResponse().getContentAsString()).path("id").asText());
   }
 
-  private UUID createTask(String token, String title) throws Exception {
+  private UUID createAuditTask(String token) throws Exception {
     MvcResult result = mvc.perform(post("/api/tasks")
         .header(AUTHORIZATION, bearer(token))
         .contentType(MediaType.APPLICATION_JSON)
         .content(json(Map.of(
-          "title", title,
+          "title", "Audit task",
           "description", "Task created to verify audit event writing",
           "category", "Audit"
         ))))
@@ -208,13 +208,13 @@ class AuditIntegrationTest {
     return UUID.fromString(objectMapper.readTree(result.getResponse().getContentAsString()).path("id").asText());
   }
 
-  private String tokenForMembership(UUID userId, UUID organizationId, Role role) {
+  private String tokenForViewerMembership(UUID userId, UUID organizationId) {
     var user = users.findById(userId).orElseThrow();
     var organization = organizations.findById(organizationId).orElseThrow();
     var membership = new Membership();
     membership.user = user;
     membership.organization = organization;
-    membership.role = role;
+    membership.role = Role.VIEWER;
     memberships.saveAndFlush(membership);
     return jwtService.create(user.id, organization.id);
   }

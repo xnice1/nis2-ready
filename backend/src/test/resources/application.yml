@@ -16,3 +16,9 @@ app:
   evidence-storage-path: ./target/evidence-test
   max-evidence-file-size-bytes: 10485760
   frontend-origin: http://localhost:5173
+  rate-limit:
+    enabled: true
+    api-requests-per-minute: 1000
+    auth-requests-per-minute: 1000
+    login-failures-per-window: 1000
+    login-failure-window-seconds: 60

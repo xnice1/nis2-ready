@@ -21,3 +21,9 @@ app:
   evidence-storage-path: ${EVIDENCE_STORAGE_PATH:./data/evidence}
   max-evidence-file-size-bytes: ${MAX_EVIDENCE_FILE_SIZE_BYTES:10485760}
   frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    api-requests-per-minute: ${RATE_LIMIT_API_REQUESTS_PER_MINUTE:300}
+    auth-requests-per-minute: ${RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE:20}
+    login-failures-per-window: ${RATE_LIMIT_LOGIN_FAILURES_PER_WINDOW:5}
+    login-failure-window-seconds: ${RATE_LIMIT_LOGIN_FAILURE_WINDOW_SECONDS:900}

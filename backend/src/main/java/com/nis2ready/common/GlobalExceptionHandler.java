@@ -20,7 +20,13 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
   @ExceptionHandler(ApiException.class)
   ResponseEntity<ApiError> api(ApiException ex, HttpServletRequest request) {
-    return error(ex.getStatus(), ex.getMessage(), request);
+    var response = error(ex.getStatus(), ex.getMessage(), request);
+    if (ex.getRetryAfterSeconds() != null) {
+      return ResponseEntity.status(response.getStatusCode())
+        .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+        .body(response.getBody());
+    }
+    return response;
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -31,6 +37,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(MaxUploadSizeExceededException.class)
+  @SuppressWarnings("unused")
   ResponseEntity<ApiError> large(MaxUploadSizeExceededException ex, HttpServletRequest request) {
     return error(HttpStatus.PAYLOAD_TOO_LARGE, "File too large", request);
   }
@@ -41,11 +48,13 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(DataIntegrityViolationException.class)
+  @SuppressWarnings("unused")
   ResponseEntity<ApiError> dataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
     return error(HttpStatus.BAD_REQUEST, "Duplicate value or invalid related record", request);
   }
 
   @ExceptionHandler(AccessDeniedException.class)
+  @SuppressWarnings("unused")
   ResponseEntity<ApiError> denied(AccessDeniedException ex, HttpServletRequest request) {
     return error(HttpStatus.FORBIDDEN, "Forbidden", request);
   }

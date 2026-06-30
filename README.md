@@ -13,6 +13,7 @@ This product is not legal advice, certification, official compliance validation,
 ## Main Features
 
 - Registration and login with JWT authentication and BCrypt password hashing
+- In-memory rate limiting for auth endpoints, authenticated API requests, and repeated failed logins
 - Automatic organization creation on registration with the user as `OWNER`
 - First/last-name user profile fields and organization member invitations for existing users
 - Consultant-client organization relationship table for future consultant dashboards
@@ -57,6 +58,11 @@ Default database settings:
 - `EVIDENCE_STORAGE_PATH`: local directory for uploaded evidence files
 - `MAX_EVIDENCE_FILE_SIZE_BYTES`: evidence upload size limit, default `10485760`
 - `FRONTEND_ORIGIN`: allowed CORS origin, default `http://localhost:5173`
+- `RATE_LIMIT_ENABLED`: enable in-memory request throttling, default `true`
+- `RATE_LIMIT_API_REQUESTS_PER_MINUTE`: authenticated API requests per minute per user and organization, default `300`
+- `RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE`: login/register requests per minute per client IP, default `20`
+- `RATE_LIMIT_LOGIN_FAILURES_PER_WINDOW`: failed login attempts per email and client IP before temporary lockout, default `5`
+- `RATE_LIMIT_LOGIN_FAILURE_WINDOW_SECONDS`: failed login lockout window length, default `900`
 
 ## Frontend Environment Variables
 
@@ -120,6 +126,7 @@ Evidence uploads are treated as confidential. The backend checks organization-sc
 - Business records are queried by `organizationId`; linked task and assessment IDs are validated before saving.
 - `VIEWER` is read-only. Organization updates and invitations require `OWNER` or `ADMIN`.
 - Audit events record sensitive workflow activity without storing passwords, JWTs, raw file paths, or file contents.
+- Rate limiting is in-memory for the MVP. Use Redis or another shared store before running multiple backend instances.
 - Do not put this development local-disk evidence store behind public internet access without adding production storage controls, malware scanning, and backups.
 
 ## Screenshots
